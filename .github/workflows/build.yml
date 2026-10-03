@@ -21,7 +21,8 @@ jobs:
         run: |
           #!/bin/bash
           set -e
-          mkdir -p app/src/main/java/com/sahayak/ai app/src/main/assets app/src/main/res
+          mkdir -p app/src/main/java/com/sahayak/ai app/src/main/assets app/src/main/res/drawable-nodpi
+          echo "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" | base64 -d > app/src/main/res/drawable-nodpi/ic_launcher.png
 
           cat > settings.gradle <<'GEOF'
           pluginManagement {
@@ -63,7 +64,9 @@ jobs:
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <application
-                  android:label="Dil AI"
+                  android:icon="@drawable/ic_launcher"
+          android:roundIcon="@drawable/ic_launcher"
+          android:label="Dil AI"
                   android:usesCleartextTraffic="true"
                   android:theme="@android:style/Theme.Material.NoActionBar">
                   <activity android:name=".MainActivity" android:exported="true">
