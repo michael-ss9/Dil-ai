@@ -65,8 +65,8 @@ jobs:
               <uses-permission android:name="android.permission.INTERNET" />
               <application
                   android:icon="@drawable/ic_launcher"
-          android:roundIcon="@drawable/ic_launcher"
-          android:label="Dil AI"
+                  android:roundIcon="@drawable/ic_launcher"
+                  android:label="Dil AI"
                   android:usesCleartextTraffic="true"
                   android:theme="@android:style/Theme.Material.NoActionBar">
                   <activity android:name=".MainActivity" android:exported="true">
@@ -114,6 +114,54 @@ jobs:
           }
           GEOF
 
+          pip install pillow -q 2>/dev/null || pip3 install pillow -q
+          python3 - <<'PYEOF'
+          import wave, struct, math, random, json
+          random.seed(7)
+          sr = 44100; dur = 25
+          notes = [261.63,329.63,392.00,523.25,659.25,783.99,659.25,523.25]
+          w = wave.open('app/src/main/assets/welcome.wav','w')
+          w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+          fr = bytearray()
+          beat = 0.8
+          for n in range(int(sr*dur)):
+              t = n/sr
+              f = notes[int(t/beat) % len(notes)]
+              env = max(0.0, 1 - (t % beat)/beat*0.75)
+              s = 0.32*env*math.sin(2*math.pi*f*t) + 0.14*env*math.sin(2*math.pi*f*2*t) + 0.05*env*math.sin(2*math.pi*f*3*t)
+              fr += struct.pack('<h', int(max(-1,min(1,s))*32767))
+          w.writeframes(bytes(fr)); w.close()
+          from PIL import Image, ImageDraw
+          W,H = 1080,1920
+          img = Image.new('RGB',(W,H)); d = ImageDraw.Draw(img)
+          for y in range(H):
+              d.line([(0,y),(W,y)], fill=(int(10+20*y/H), int(20+15*y/H), int(45+40*y/H)))
+          for _ in range(26):
+              x,y,r = random.randint(0,W), random.randint(0,H), random.randint(18,70)
+              d.ellipse([x-r,y-r,x,y], fill=(255,255,255,18))
+              d.ellipse([x,y-r,x+r,y], fill=(255,255,255,18))
+              d.polygon([(x-r+2,y-2),(x+r-2,y-2),(x,y+r)], fill=(255,255,255,18))
+          d.text((W//2-180, H//2-140), "Dil AI", fill=(255,255,255))
+          img.save('app/src/main/assets/splash.png')
+          p = Image.new('RGB',(420,420),(26,27,46)); pd = ImageDraw.Draw(p)
+          for gx in range(0,420,35):
+              for gy in range(0,420,35):
+                  pd.ellipse([gx+14,gy+14,gx+20,gy+20], fill=(35,38,62))
+          p.save('app/src/main/assets/pattern.png')
+          subjects = {'Math':['BODMAS rule: pehle Bracket, phir Order/Divide/Multiply/Add/Subtract','45 ka square = 2025. Trick: 4x5=20, 5x5=25','Prime numbers: 2,3,5,7,11,13,17,19,23...'],
+          'Science':['Pani 100°C pe ubalta hai (samundar ke level pe)','Speed of light = 3 lakh km/second','Human body mein 206 haddiyan hain'],
+          'English':['Their = possessive, There = jagah','Affect = verb (asar), Effect = noun (natija)'],
+          'GK':['Taj Mahal Agra mein hai - Shah Jahan ne banwaya tha','Earth ka sabse gehra hissa: Mariana Trench']}
+          tips = ['Pomodoro: 25 min padho, 5 min break','Sone se pehle 10 min revision = yaaddasht 2x','Phone doosre kamre mein rakho - focus 3x','Notes haath se likho - dimag active rehta hai','Feynman Technique: bacche ko samjha ke dekho']
+          shayari = ['Mehnat ka phal hamesha meetha hota hai','Safar lamba ho sakta hai, rukna mana hai','Chhote kadam badi manzil tak le jaate hain','Girna bhi seekhane ka hissa hai']
+          facts = []
+          for cat, items in subjects.items():
+              for it in items: facts.append('[' + cat + '] ' + it)
+          facts += tips + shayari
+          json.dump(facts, open('app/src/main/assets/offline.json','w'), ensure_ascii=False)
+          print('Assets ready:', len(facts), 'facts')
+          PYEOF
+
           cat > app/src/main/assets/sahayak.html <<'HEOF'
           <!DOCTYPE html>
           <html lang="hi">
@@ -126,7 +174,11 @@ jobs:
           <title>Dil AI</title>
           <style>
             * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
-            body { background:#1a1a2e; color:#eee; height:100vh; display:flex; flex-direction:column; }
+            body { background:#1a1a2e url('file:///android_asset/pattern.png'); background-size:420px; color:#eee; height:100vh; display:flex; flex-direction:column; }
+            #splash { position:fixed; inset:0; z-index:99; background:#1a1a2e url('file:///android_asset/splash.png') center/cover no-repeat; display:flex; align-items:flex-end; justify-content:center; transition:opacity .6s; }
+            #splash .bar { width:55%; height:4px; background:#252b45; border-radius:2px; margin-bottom:15%; overflow:hidden; }
+            #splash .bar i { display:block; height:100%; width:40%; background:linear-gradient(90deg,#00d2ff,#928dff); border-radius:2px; animation:load 1.1s infinite; }
+            @keyframes load { 0%{margin-left:-40%} 100%{margin-left:100%} }
 
             #header { background:#16213e; padding:14px 16px; display:flex; align-items:center; gap:10px;
                       box-shadow:0 2px 10px rgba(0,0,0,.4); }
@@ -167,6 +219,7 @@ jobs:
           </style>
           </head>
           <body>
+          <div id="splash"><div class="bar"><i></i></div></div>
 
           <div id="header">
             <div class="logo">🧠</div>
@@ -226,6 +279,10 @@ jobs:
           const input = document.getElementById('input');
           let history = [];
 
+          // Splash + welcome chime
+          setTimeout(()=>{ const s=document.getElementById('splash'); if(s){ s.style.opacity='0'; setTimeout(()=>s.remove(),650);} },1500);
+          document.addEventListener('click', function ch(){ const a=new Audio('file:///android_asset/welcome.wav'); a.volume=.45; a.play().catch(()=>{}); }, {once:true});
+
           // Load saved key & chat
           const savedKey = localStorage.getItem('gemini_key');
           if (savedKey) { document.getElementById('apiKey').value = savedKey; }
@@ -247,65 +304,4 @@ jobs:
 
           function addBubble(who, text, save=true){
             const d = document.createElement('div');
-            d.className = 'msg ' + who;
-            d.textContent = text;
-            chat.appendChild(d);
-            chat.scrollTop = chat.scrollHeight;
-          }
-
-          function botSay(t){ addBubble('bot', t); }
-
-          async function sendMsg(){
-            const text = input.value.trim();
-            if(!text) return;
-            input.value = '';
-            addBubble('user', text);
-            history.push({role:'user', parts:text});
-            localStorage.setItem('chat_history', JSON.stringify(history));
-
-            const typing = document.createElement('div');
-            typing.className = 'msg bot typing';
-            typing.textContent = 'Dil soch raha hai...';
-            chat.appendChild(typing); chat.scrollTop = chat.scrollHeight;
-
-            const key = localStorage.getItem('gemini_key');
-            if(!key){ typing.remove(); openModal(); return; }
-
-            try {
-              const contents = [{role:'user', parts:SYSTEM}].concat(history);
-              const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({contents})
-              });
-              const data = await res.json();
-              typing.remove();
-              if(data.error){ botSay('⚠️ Error: ' + data.error.message + '\n(API key check karo)'); return; }
-              const reply = data.candidates[0].content.parts[0].text;
-              history.push({role:'model', parts:reply});
-              localStorage.setItem('chat_history', JSON.stringify(history));
-              botSay(reply);
-            } catch(e) {
-              typing.remove();
-              botSay('⚠️ Network error. Internet check karo aur phir try karo.');
-            }
-          }
-
-          input.addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
-          document.getElementById('send').addEventListener('click', sendMsg);
-          </script>
-          </body>
-          </html>
-          HEOF
-
-          mkdir -p "$ANDROID_HOME/licenses"
-          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$ANDROID_HOME/licenses/android-sdk-license"
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools" > /dev/null 2>&1 || true
-          gradle assembleDebug --no-daemon
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Dil-AI-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
-          
+            d.classNa
