@@ -1,0 +1,26 @@
+name: 🐛 Bug Report
+description: Kuch toot gaya? Yahan report karo
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Kya problem aa rahi hai?
+      description: Step-by-step likho kya hua
+    validations:
+      required: true
+  - type: textarea
+    id: expect
+    attributes:
+      label: Kya hona chahiye tha?
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: "jaise: v1.0.0"
+  - type: input
+    id: phone
+    attributes:
+      label: Phone / Browser
+      placeholder: "jaise: Vivo Y200, Chrome"
