@@ -1,0 +1,16 @@
+name: ✨ Feature Request
+description: Naya feature chahiye? Suggest karo
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Feature ka idea
+      description: Detail mein batao kya chahiye aur kyun
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example (agar kisi aur app mein dekha ho)
