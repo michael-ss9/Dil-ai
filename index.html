@@ -114,8 +114,9 @@ const savedKey = localStorage.getItem('gemini_key');
 if (savedKey) { document.getElementById('apiKey').value = savedKey; }
 const savedChat = localStorage.getItem('chat_history');
 if (savedChat) {
-  history = JSON.parse(savedChat);
-  history.forEach(m => addBubble(m.role === 'user' ? 'user' : 'bot', m.parts, false));
+  history = JSON.parse(savedChat).map(m =>
+    typeof m.parts === 'string' ? {role: m.role, parts:[{text: m.parts}]} : m);
+  history.forEach(m => addBubble(m.role === 'user' ? 'user' : 'bot', m.parts[0].text, false));
 }
 if (!savedKey) openModal();
 
@@ -143,7 +144,7 @@ async function sendMsg(){
   if(!text) return;
   input.value = '';
   addBubble('user', text);
-  history.push({role:'user', parts:text});
+  history.push({role:'user', parts:[{text: text}]});
   localStorage.setItem('chat_history', JSON.stringify(history));
 
   const typing = document.createElement('div');
@@ -155,7 +156,7 @@ async function sendMsg(){
   if(!key){ typing.remove(); openModal(); return; }
 
   try {
-    const contents = [{role:'user', parts:SYSTEM}].concat(history);
+    const contents = [{role:'user', parts:[{text: SYSTEM}]}].concat(history);
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -165,7 +166,7 @@ async function sendMsg(){
     typing.remove();
     if(data.error){ botSay('⚠️ Error: ' + data.error.message + '\n(API key check karo)'); return; }
     const reply = data.candidates[0].content.parts[0].text;
-    history.push({role:'model', parts:reply});
+    history.push({role:'model', parts:[{text: reply}]});
     localStorage.setItem('chat_history', JSON.stringify(history));
     botSay(reply);
   } catch(e) {
